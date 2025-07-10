@@ -35,10 +35,10 @@ const upload = multer({
 
 // Email route
 app.post('/send-email', upload.single('payment'), async (req, res) => {
-  const { name, mobile, city, business, passId } = req.body;
+  const { name, mobile, city, business, passId, passImage } = req.body;
   const payment = req.file;
 
-  if (!name || !mobile || !/^\d{10}$/.test(mobile) || !city || !business || !payment || !passId) {
+  if (!name || !mobile || !/^\d{10}$/.test(mobile) || !city || !business || !payment || !passId || !passImage) {
     return res.status(400).json({ message: 'Missing or invalid fields.' });
   }
 
@@ -51,31 +51,52 @@ app.post('/send-email', upload.single('payment'), async (req, res) => {
       },
     });
 
-    // Email to admin
+    // Convert base64 passImage to buffer
+    const passImageBuffer = Buffer.from(passImage.replace(/^data:image\/png;base64,/, ''), 'base64');
+
+    // Professional email to admin
     await transporter.sendMail({
       from: `"Canton Fair Seminar" <${process.env.EMAIL_USER}>`,
       to: 'Adinathoverseasrjt@gmail.com',
       subject: `New Registration: Canton Fair Seminar - ${name}`,
       html: `
-        <h2>New Registration Details</h2>
-        <p><strong>Name:</strong> ${name}</p>
-        <p><strong>Mobile:</strong> ${mobile}</p>
-        <p><strong>City:</strong> ${city}</p>
-        <p><strong>Business Type:</strong> ${business}</p>
-        <p><strong>Pass ID:</strong> ${passId}</p>
-        <p>Please find the payment screenshot attached below.</p>
-        <p>Event Details:</p>
-        <ul>
-          <li>Date: 20 July 2025</li>
-          <li>Time: 5 PM Onward</li>
-          <li>Location: S.G Highway, Ahmedabad</li>
-        </ul>
+        <div style="font-family: 'Poppins', Arial, sans-serif; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px; background: #f9f9f9;">
+          <h2 style="color: #ffcc00; text-align: center; font-size: 24px; margin-bottom: 20px;">New Registration Details</h2>
+          <table style="width: 100%; border-collapse: collapse;">
+            <tr>
+              <td style="padding: 10px; font-weight: 600; width: 30%;">Name:</td>
+              <td style="padding: 10px;">${name}</td>
+            </tr>
+            <tr>
+              <td style="padding: 10px; font-weight: 600;">Mobile:</td>
+              <td style="padding: 10px;">${mobile}</td>
+            </tr>
+            <tr>
+              <td style="padding: 10px; font-weight: 600;">City:</td>
+              <td style="padding: 10px;">${city}</td>
+            </tr>
+            <tr>
+              <td style="padding: 10px; font-weight: 600;">Business Type:</td>
+              <td style="padding: 10px;">${business}</td>
+            </tr>
+            <tr>
+              <td style="padding: 10px; font-weight: 600;">Pass ID:</td>
+              <td style="padding: 10px;">${passId}</td>
+            </tr>
+          </table>
+          <p style="margin-top: 20px; text-align: center; color: #555;">Please find the payment screenshot and event pass attached below.</p>
+        </div>
       `,
       attachments: [
         {
           filename: payment.originalname,
           content: payment.buffer,
           contentType: payment.mimetype,
+        },
+        {
+          filename: `EventPass_${passId}.png`,
+          content: passImageBuffer,
+          contentType: 'image/png',
         },
       ],
     });

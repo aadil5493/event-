@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Event Registration - Canton Fair Seminar</title>
   <link rel="icon" href="data:,">
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;700&family=Roboto+Condensed:wght@700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Roboto+Condensed:wght@700&display=swap" rel="stylesheet">
   <style>
     * {
       margin: 0;
@@ -21,21 +21,22 @@
       justify-content: center;
       align-items: center;
       min-height: 100vh;
-      padding: 20px;
+      padding: 15px;
     }
 
     .form-container {
-      max-width: 500px;
+      max-width: 450px;
       width: 100%;
       background: #2e2e2e;
-      border-radius: 15px;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      border-radius: 12px;
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
       overflow: hidden;
-      transition: opacity 0.5s ease;
+      transition: opacity 0.5s ease, transform 0.3s ease;
     }
 
     .form-container.hidden {
       opacity: 0;
+      transform: translateY(20px);
       display: none;
     }
 
@@ -46,84 +47,85 @@
     }
 
     .form-content {
-      padding: 30px;
+      padding: 25px;
     }
 
     h2 {
       text-align: center;
-      margin-bottom: 20px;
+      margin-bottom: 15px;
       color: #ffcc00;
-      font-size: 2em;
+      font-size: 1.8em;
       font-weight: 700;
       text-transform: uppercase;
     }
 
     label {
       display: block;
-      margin: 15px 0 5px;
+      margin: 12px 0 4px;
       font-weight: 500;
       color: #f1f1f1;
-      font-size: 1.1em;
+      font-size: 1em;
     }
 
     input[type="text"],
     input[type="tel"],
     input[type="file"] {
       width: 100%;
-      padding: 12px;
+      padding: 10px;
       border: none;
-      border-radius: 8px;
+      border-radius: 6px;
       background: #444;
       color: #fff;
-      font-size: 1em;
+      font-size: 0.95em;
       transition: background 0.3s, box-shadow 0.3s;
     }
 
     input[type="text"]:focus,
     input[type="tel"]:focus {
       background: #555;
-      box-shadow: 0 0 10px rgba(255, 204, 0, 0.5);
+      box-shadow: 0 0 8px rgba(255, 204, 0, 0.5);
       outline: none;
     }
 
     input[type="file"] {
-      padding: 10px 0;
+      padding: 8px 0;
       background: none;
     }
 
     .qr-section {
       text-align: center;
-      margin: 20px 0;
+      margin: 15px 0;
     }
 
     .qr-section img {
-      width: 150px;
-      border-radius: 10px;
-      border: 3px solid #ffcc00;
+      width: 120px;
+      border-radius: 8px;
+      border: 2px solid #ffcc00;
     }
 
     .qr-section p {
-      margin: 10px 0;
-      font-size: 1.2em;
+      margin: 8px 0;
+      font-size: 1.1em;
       color: #ffcc00;
       font-weight: 500;
     }
 
     .submit-btn {
       width: 100%;
-      padding: 15px;
+      padding: 12px;
       background: linear-gradient(90deg, #ffcc00, #f39c12);
       border: none;
-      border-radius: 8px;
-      font-size: 1.2em;
+      border-radius: 6px;
+      font-size: 1.1em;
       font-weight: 600;
       color: #1a1a1a;
       cursor: pointer;
-      transition: background 0.3s;
+      transition: background 0.3s, transform 0.2s;
     }
 
     .submit-btn:hover {
       background: linear-gradient(90deg, #f39c12, #e67e22);
+      transform: scale(1.02);
     }
 
     .submit-btn:disabled {
@@ -133,150 +135,92 @@
 
     .error-message {
       color: #ff4444;
-      font-size: 0.9em;
-      margin-top: 5px;
+      font-size: 0.85em;
+      margin-top: 4px;
       display: none;
     }
 
-    #eventPass {
+    .pass-container {
       display: none;
-      width: 400px;
       max-width: 400px;
-      background: linear-gradient(135deg, #2a5298, #1e3c72);
-      border-radius: 15px;
-      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
-      padding: 30px;
+      width: 100%;
       text-align: center;
-      border: 4px solid #ffcc00;
-      position: relative;
-      background-clip: padding-box;
-      font-family: 'Roboto Condensed', sans-serif;
-      background-image: linear-gradient(135deg, #2a5298, #1e3c72),
-                        url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20"><path fill="rgba(255,255,255,0.05)" d="M2 2h16v16H2z"/></svg>');
-      background-size: cover, 20px 20px;
+      background: #2e2e2e;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+      border: 1px solid #ffcc00;
+      animation: fadeIn 0.5s ease-in;
+    }
+
+    #passCanvas {
+      width: 100%;
+      max-width: 350px;
+      border-radius: 10px;
+      border: 2px solid #ffcc00;
+      display: block;
+      margin: 0 auto;
+    }
+
+    .pass-buttons {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      margin-top: 20px;
+    }
+
+    .pass-buttons button {
+      width: 200px;
+      padding: 10px;
+      font-size: 14px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      font-family: 'Poppins', sans-serif;
+      transition: transform 0.2s, background 0.3s;
+    }
+
+    .pass-buttons button:hover {
+      transform: scale(1.05);
+    }
+
+    .pass-buttons .download-btn {
+      background: linear-gradient(90deg, #ffcc00, #f39c12);
+      color: #000;
+    }
+
+    .pass-buttons .new-entry-btn {
+      background: #555;
+      color: #fff;
     }
 
     @keyframes fadeIn {
-      from { opacity: 0; }
-      to { opacity: 1; }
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
     }
 
-    #eventPass .logo {
-      width: 90px;
-      height: auto;
-      margin: 0 auto 20px;
-      display: block;
-      border-radius: 8px;
-      border: 2px solid #ffcc00;
-    }
-
-    #eventPass .pass-qr {
-      width: 100px;
-      height: auto;
-      margin: 20px auto;
-      display: block;
-      border-radius: 8px;
-      border: 2px solid #ffcc00;
-    }
-
-    #eventPass h3 {
-      color: #ffcc00;
-      font-size: 2.4em;
-      margin-bottom: 15px;
-      text-transform: uppercase;
-      letter-spacing: 1.5px;
-      font-weight: 700;
-    }
-
-    #eventPass .event-title {
-      font-size: 1.6em;
-      color: #fff;
-      margin-bottom: 25px;
-      font-weight: 600;
-      line-height: 1.3;
-      font-family: 'Poppins', sans-serif;
-    }
-
-    #eventPass .event-info {
-      background: rgba(255, 255, 255, 0.12);
-      padding: 20px;
-      border-radius: 10px;
-      margin-bottom: 25px;
-      border: 1px solid rgba(255, 204, 0, 0.4);
-    }
-
-    #eventPass .event-info p {
-      margin: 10px 0;
-      font-size: 1em;
-      line-height: 1.6;
-      color: #e0e0e0;
-      text-align: left;
-      font-family: 'Poppins', sans-serif;
-    }
-
-    #eventPass .event-info .highlight {
-      color: #ffcc00;
-      font-weight: bold;
-      font-size: 1.2em;
-      text-align: center;
-      margin: 15px 0;
-    }
-
-    #eventPass .customer-details {
-      background: rgba(255, 255, 255, 0.18);
-      padding: 20px;
-      border-radius: 10px;
-      border: 1px solid rgba(255, 204, 0, 0.4);
-      margin-bottom: 20px;
-    }
-
-    #eventPass .customer-details p {
-      margin: 10px 0;
-      font-size: 1.1em;
-      font-weight: 500;
-      color: #fff;
-      text-align: left;
-      font-family: 'Poppins', sans-serif;
-    }
-
-    #eventPass .pass-id {
-      font-size: 1.4em;
-      color: #ffcc00;
-      font-weight: bold;
-      margin-top: 20px;
-      letter-spacing: 3px;
-      background: rgba(0, 0, 0, 0.3);
-      padding: 12px;
-      border-radius: 8px;
-    }
-
-    #eventPass .footer {
-      font-size: 0.8em;
-      color: #ccc;
-      margin-top: 20px;
-      font-family: 'Poppins', sans-serif;
-      opacity: 0.8;
-    }
-
-    @media (max-width: 500px) {
-      .form-container, #eventPass {
+    @media (max-width: 450px) {
+      .form-container, .pass-container {
         width: 95%;
         max-width: 95%;
+        padding: 12px;
+      }
+      #passCanvas {
+        width: 100%;
+        max-width: 100%;
       }
       h2 {
-        font-size: 1.5em;
-      }
-      #eventPass h3 {
-        font-size: 2em;
-      }
-      #eventPass .event-title {
         font-size: 1.4em;
       }
-      #eventPass .pass-id {
-        font-size: 1.2em;
+      .pass-buttons button {
+        width: 80%;
+        font-size: 13px;
+        padding: 8px;
       }
-      #eventPass .pass-qr {
-        width: 80px;
+      .qr-section img {
+        width: 100px;
       }
     }
   </style>
@@ -286,7 +230,7 @@
     <img src="Welcome.jpg" alt="Canton Fair Seminar" class="header-image">
     <div class="form-content">
       <h2>Register for Canton Fair Seminar</h2>
-      <div id="formError" class="error-message" style="text-align: center; margin-bottom: 15px;"></div>
+      <div id="formError" class="error-message" style="text-align: center; margin-bottom: 12px;"></div>
       <form id="eventForm">
         <label for="name">Full Name:</label>
         <input type="text" id="name" name="name" required>
@@ -300,9 +244,9 @@
         <input type="text" id="city" name="city" required>
         <div class="error-message" id="cityError"></div>
 
-        <label bakery = "business">Business Type:</label>
+        <label for="business">Business Type:</label>
         <input type="text" id="business" name="business" required>
-        <div class="error-message" id  = "businessError"></div>
+        <div class="error-message" id="businessError"></div>
 
         <div class="qr-section">
           <img src="QR1.jpg" alt="QR Code for ₹1299 Payment">
@@ -318,46 +262,45 @@
     </div>
   </div>
 
-  <div id="eventPass">
-    <img src="1745216646logo.png" alt="Event Logo" class="logo">
-    <h3>Event Pass</h3>
-    <div class="event-title">Canton Fair China & Import-Export Guide</div>
-    <img src="QR1.jpg" alt="Pass QR Code" class="pass-qr">
-    <div class="event-info">
-      <p>✔ Overview of the Canton Fair - what it is & how to attend</p>
-      <p>✔ How to find trusted suppliers in China</p>
-      <p>✔ Import & export process - step-by-step guide</p>
-      <p>✔ Key documents, shipping & logistics explained</p>
-      <p>✔ Tips to avoid scams & ensure product quality</p>
-      <p>✔ Q&A session with trade experts</p>
-      <p class="highlight">Perfect for business owners, startups & import-export beginners</p>
-      <p class="highlight">20 JULY 2025 | 5 PM ONWARD</p>
-      <p class="highlight">S.G HIGHWAY, AHMEDABAD</p>
+  <div class="pass-container" id="passContainer">
+    <canvas id="passCanvas"></canvas>
+    <div class="pass-buttons" id="actionButtons">
+      <button class="download-btn" onclick="downloadPass()">Download Pass</button>
+      <button class="new-entry-btn" onclick="newEntry()">New Entry</button>
     </div>
-    <div class="customer-details">
-      <p><strong>Name:</strong> <span id="pName"></span></p>
-      <p><strong>Mobile:</strong> <span id="pMobile"></span></p>
-      <p><strong>City:</strong> <span id="pCity"></span></p>
-      <p><strong>Business:</strong> <span id="pBusiness"></span></p>
-      <p><strong>Pass ID:</strong> <span id="pPassId"></span></p>
-    </div>
-    <div class="footer">Canton Fair Seminar | Non-transferable Pass | Contact: support@cantonfair.com</div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   <script>
     const form = document.getElementById('eventForm');
     const submitBtn = document.getElementById('submitBtn');
-    const eventPass = document.getElementById('eventPass');
+    const passContainer = document.getElementById('passContainer');
     const formContainer = document.getElementById('formContainer');
+    const actionButtons = document.getElementById('actionButtons');
     const formError = document.getElementById('formError');
+    const passCanvas = document.getElementById('passCanvas');
+    const ctx = passCanvas.getContext('2d');
 
-    // Generate unique pass ID
+    // Initialize pass ID counter from localStorage
+    let passCounter = parseInt(localStorage.getItem('passCounter') || '0');
+
     function generatePassId() {
-      return 'CF' + Math.random().toString(36).substr(2, 8).toUpperCase();
+      passCounter++;
+      localStorage.setItem('passCounter', passCounter);
+      return passCounter.toString();
     }
 
-    // Validation function
+    // Set canvas size
+    function setCanvasSize() {
+      const maxWidth = window.innerWidth > 450 ? 350 : window.innerWidth * 0.95;
+      passCanvas.width = maxWidth * 1.5; // Reduced resolution for smaller file size
+      passCanvas.height = maxWidth * 1.8; // Compact aspect ratio
+      passCanvas.style.width = `${maxWidth}px`;
+      passCanvas.style.height = `${maxWidth * 1.8}px`;
+    }
+    setCanvasSize();
+    window.addEventListener('resize', setCanvasSize);
+
     function validateInputs() {
       let isValid = true;
       const name = document.getElementById('name').value.trim();
@@ -366,7 +309,6 @@
       const business = document.getElementById('business').value.trim();
       const payment = document.getElementById('payment').files[0];
 
-      // Reset error messages
       document.querySelectorAll('.error-message').forEach(el => {
         el.textContent = '';
         el.style.display = 'none';
@@ -377,25 +319,21 @@
         document.getElementById('nameError').style.display = 'block';
         isValid = false;
       }
-
       if (!mobile || !/^[0-9]{10}$/.test(mobile)) {
         document.getElementById('mobileError').textContent = 'Enter a valid 10-digit mobile number.';
         document.getElementById('mobileError').style.display = 'block';
         isValid = false;
       }
-
       if (!city) {
         document.getElementById('cityError').textContent = 'City is required.';
         document.getElementById('cityError').style.display = 'block';
         isValid = false;
       }
-
       if (!business) {
         document.getElementById('businessError').textContent = 'Business type is required.';
         document.getElementById('businessError').style.display = 'block';
         isValid = false;
       }
-
       if (!payment || !['image/jpeg', 'image/png'].includes(payment.type)) {
         document.getElementById('paymentError').textContent = 'Please upload a valid JPEG/PNG image.';
         document.getElementById('paymentError').style.display = 'block';
@@ -405,7 +343,6 @@
       return isValid;
     }
 
-    // Form submission handler
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       formError.textContent = '';
@@ -418,63 +355,93 @@
 
       const formData = new FormData(form);
       const name = formData.get('name');
+      const mobile = formData.get('mobile');
+      const city = formData.get('city');
+      const business = formData.get('business');
       const passId = generatePassId();
 
       try {
-        // Populate event pass
-        document.getElementById('pName').textContent = name;
-        document.getElementById('pMobile').textContent = formData.get('mobile');
-        document.getElementById('pCity').textContent = formData.get('city');
-        document.getElementById('pBusiness').textContent = formData.get('business');
-        document.getElementById('pPassId').textContent = passId;
+        const bgImage = new Image();
+        bgImage.src = 'invitation pass.jpg';
 
-        // Hide form and show event pass
-        formContainer.classList.add('hidden');
-        eventPass.style.display = 'block';
+        bgImage.onload = async () => {
+          // Clear and draw background
+          ctx.clearRect(0, 0, passCanvas.width, passCanvas.height);
+          ctx.drawImage(bgImage, 0, 0, passCanvas.width, passCanvas.height);
 
-        // Capture event pass as image with higher quality
-        const pixelRatio = window.devicePixelRatio || 1;
-        const canvas = await html2canvas(eventPass, {
-          scale: 5 * pixelRatio, // Higher scale adjusted for device pixel ratio
-          useCORS: true,
-          backgroundColor: null,
-          width: 400 * pixelRatio,
-          height: eventPass.offsetHeight * pixelRatio,
-          windowWidth: 400 * pixelRatio,
-          windowHeight: eventPass.offsetHeight * pixelRatio
-        });
-        const imgData = canvas.toDataURL('image/png', 1.0);
+          // Text styling for customer details
+          const fontSize = passCanvas.width / 35; // ~10px at 350px width
+          ctx.font = `600 ${fontSize}px Poppins`;
+          ctx.fillStyle = '#000';
+          ctx.textAlign = 'center';
 
-        // Download event pass
-        const link = document.createElement('a');
-        link.href = imgData;
-        link.download = `Canton_Fair_Pass_${name}_${passId}.png`;
-        link.click();
+          // White box center for customer details
+          const centerX = passCanvas.width / 2;
+          const startY = passCanvas.height * 0.55;
+          const lineHeight = fontSize * 1.4;
 
-        // Send data to admin
-        formData.append('passId', passId);
-        const response = await fetch('http://localhost:5000/send-email', {
-          method: 'POST',
-          body: formData,
-        });
+          // Draw customer details
+          ctx.fillText(`Name: ${name}`, centerX, startY);
+          ctx.fillText(`Mobile: ${mobile}`, centerX, startY + lineHeight);
+          ctx.fillText(`City: ${city}`, centerX, startY + lineHeight * 2);
+          ctx.fillText(`Business: ${business}`, centerX, startY + lineHeight * 3);
 
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.message || 'Failed to send email to admin.');
-        }
+          // Pass ID at top-left corner, 40px from left
+          ctx.font = `500 ${fontSize * 0.9}px Poppins`; // Smaller, non-bold (~9px)
+          ctx.fillStyle = '#fff';
+          ctx.textAlign = 'left';
+          ctx.fillText(`Pass ID: ${passId}`, passCanvas.width * 0.114, passCanvas.height * 0.05); // 40px at 350px width
 
-        alert('Registration successful! Event pass downloaded and details sent to admin.');
-        form.reset();
+          // Show pass and buttons
+          formContainer.classList.add('hidden');
+          passContainer.style.display = 'block';
+          actionButtons.style.display = 'flex';
+
+          // Prepare pass image for email
+          const passImageData = passCanvas.toDataURL('image/png');
+          formData.append('passImage', passImageData);
+          formData.append('passId', passId);
+
+          // Send email
+          const response = await fetch('http://localhost:5000/send-email', {
+            method: 'POST',
+            body: formData,
+          });
+
+          if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'Failed to send email to admin.');
+          }
+
+          formError.textContent = 'Registration successful! Pass displayed and details sent to admin.';
+          formError.style.color = '#ffcc00';
+          formError.style.display = 'block';
+        };
       } catch (err) {
         console.error('Error:', err);
-        formError.textContent = `Registration completed, but email could not be sent: ${err.message}. Please contact support.`;
+        formError.textContent = `Registration completed, but error occurred: ${err.message}`;
         formError.style.display = 'block';
-        eventPass.style.display = 'block';
       } finally {
         submitBtn.disabled = false;
         submitBtn.textContent = 'Submit Registration';
       }
     });
+
+    function downloadPass() {
+      const link = document.createElement('a');
+      link.download = `CantonFair_EventPass_${document.getElementById('name').value || 'Pass'}_${passCounter}.png`;
+      link.href = passCanvas.toDataURL('image/png');
+      link.click();
+    }
+
+    function newEntry() {
+      form.reset();
+      passContainer.style.display = 'none';
+      actionButtons.style.display = 'none';
+      formContainer.classList.remove('hidden');
+      formError.style.display = 'none';
+      ctx.clearRect(0, 0, passCanvas.width, passCanvas.height);
+    }
   </script>
 </body>
 </html>
