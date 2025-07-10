@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Event Registration - Canton Fair Seminar</title>
+  <link rel="icon" href="data:,">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;700&family=Roboto+Condensed:wght@700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: linear-gradient(135deg, #1a1a1a, #2c2c2c);
+      font-family: 'Poppins', sans-serif;
+      color: #fff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .form-container {
+      max-width: 500px;
+      width: 100%;
+      background: #2e2e2e;
+      border-radius: 15px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      overflow: hidden;
+      transition: opacity 0.5s ease;
+    }
+
+    .form-container.hidden {
+      opacity: 0;
+      display: none;
+    }
+
+    .header-image {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    .form-content {
+      padding: 30px;
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #ffcc00;
+      font-size: 2em;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    label {
+      display: block;
+      margin: 15px 0 5px;
+      font-weight: 500;
+      color: #f1f1f1;
+      font-size: 1.1em;
+    }
+
+    input[type="text"],
+    input[type="tel"],
+    input[type="file"] {
+      width: 100%;
+      padding: 12px;
+      border: none;
+      border-radius: 8px;
+      background: #444;
+      color: #fff;
+      font-size: 1em;
+      transition: background 0.3s, box-shadow 0.3s;
+    }
+
+    input[type="text"]:focus,
+    input[type="tel"]:focus {
+      background: #555;
+      box-shadow: 0 0 10px rgba(255, 204, 0, 0.5);
+      outline: none;
+    }
+
+    input[type="file"] {
+      padding: 10px 0;
+      background: none;
+    }
+
+    .qr-section {
+      text-align: center;
+      margin: 20px 0;
+    }
+
+    .qr-section img {
+      width: 150px;
+      border-radius: 10px;
+      border: 3px solid #ffcc00;
+    }
+
+    .qr-section p {
+      margin: 10px 0;
+      font-size: 1.2em;
+      color: #ffcc00;
+      font-weight: 500;
+    }
+
+    .submit-btn {
+      width: 100%;
+      padding: 15px;
+      background: linear-gradient(90deg, #ffcc00, #f39c12);
+      border: none;
+      border-radius: 8px;
+      font-size: 1.2em;
+      font-weight: 600;
+      color: #1a1a1a;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    .submit-btn:hover {
+      background: linear-gradient(90deg, #f39c12, #e67e22);
+    }
+
+    .submit-btn:disabled {
+      background: #666;
+      cursor: not-allowed;
+    }
+
+    .error-message {
+      color: #ff4444;
+      font-size: 0.9em;
+      margin-top: 5px;
+      display: none;
+    }
+
+    #eventPass {
+      display: none;
+      width: 400px;
+      max-width: 400px;
+      background: linear-gradient(135deg, #2a5298, #1e3c72);
+      border-radius: 15px;
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
+      padding: 30px;
+      text-align: center;
+      border: 4px solid #ffcc00;
+      position: relative;
+      background-clip: padding-box;
+      font-family: 'Roboto Condensed', sans-serif;
+      background-image: linear-gradient(135deg, #2a5298, #1e3c72),
+                        url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20"><path fill="rgba(255,255,255,0.05)" d="M2 2h16v16H2z"/></svg>');
+      background-size: cover, 20px 20px;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    #eventPass .logo {
+      width: 90px;
+      height: auto;
+      margin: 0 auto 20px;
+      display: block;
+      border-radius: 8px;
+      border: 2px solid #ffcc00;
+    }
+
+    #eventPass .pass-qr {
+      width: 100px;
+      height: auto;
+      margin: 20px auto;
+      display: block;
+      border-radius: 8px;
+      border: 2px solid #ffcc00;
+    }
+
+    #eventPass h3 {
+      color: #ffcc00;
+      font-size: 2.4em;
+      margin-bottom: 15px;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      font-weight: 700;
+    }
+
+    #eventPass .event-title {
+      font-size: 1.6em;
+      color: #fff;
+      margin-bottom: 25px;
+      font-weight: 600;
+      line-height: 1.3;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    #eventPass .event-info {
+      background: rgba(255, 255, 255, 0.12);
+      padding: 20px;
+      border-radius: 10px;
+      margin-bottom: 25px;
+      border: 1px solid rgba(255, 204, 0, 0.4);
+    }
+
+    #eventPass .event-info p {
+      margin: 10px 0;
+      font-size: 1em;
+      line-height: 1.6;
+      color: #e0e0e0;
+      text-align: left;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    #eventPass .event-info .highlight {
+      color: #ffcc00;
+      font-weight: bold;
+      font-size: 1.2em;
+      text-align: center;
+      margin: 15px 0;
+    }
+
+    #eventPass .customer-details {
+      background: rgba(255, 255, 255, 0.18);
+      padding: 20px;
+      border-radius: 10px;
+      border: 1px solid rgba(255, 204, 0, 0.4);
+      margin-bottom: 20px;
+    }
+
+    #eventPass .customer-details p {
+      margin: 10px 0;
+      font-size: 1.1em;
+      font-weight: 500;
+      color: #fff;
+      text-align: left;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    #eventPass .pass-id {
+      font-size: 1.4em;
+      color: #ffcc00;
+      font-weight: bold;
+      margin-top: 20px;
+      letter-spacing: 3px;
+      background: rgba(0, 0, 0, 0.3);
+      padding: 12px;
+      border-radius: 8px;
+    }
+
+    #eventPass .footer {
+      font-size: 0.8em;
+      color: #ccc;
+      margin-top: 20px;
+      font-family: 'Poppins', sans-serif;
+      opacity: 0.8;
+    }
+
+    @media (max-width: 500px) {
+      .form-container, #eventPass {
+        width: 95%;
+        max-width: 95%;
+      }
+      h2 {
+        font-size: 1.5em;
+      }
+      #eventPass h3 {
+        font-size: 2em;
+      }
+      #eventPass .event-title {
+        font-size: 1.4em;
+      }
+      #eventPass .pass-id {
+        font-size: 1.2em;
+      }
+      #eventPass .pass-qr {
+        width: 80px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="form-container" id="formContainer">
+    <img src="Welcome.jpg" alt="Canton Fair Seminar" class="header-image">
+    <div class="form-content">
+      <h2>Register for Canton Fair Seminar</h2>
+      <div id="formError" class="error-message" style="text-align: center; margin-bottom: 15px;"></div>
+      <form id="eventForm">
+        <label for="name">Full Name:</label>
+        <input type="text" id="name" name="name" required>
+        <div class="error-message" id="nameError"></div>
+
+        <label for="mobile">Mobile Number:</label>
+        <input type="tel" id="mobile" name="mobile" required maxlength="10" pattern="[0-9]{10}">
+        <div class="error-message" id="mobileError"></div>
+
+        <label for="city">City:</label>
+        <input type="text" id="city" name="city" required>
+        <div class="error-message" id="cityError"></div>
+
+        <label bakery = "business">Business Type:</label>
+        <input type="text" id="business" name="business" required>
+        <div class="error-message" id  = "businessError"></div>
+
+        <div class="qr-section">
+          <img src="QR1.jpg" alt="QR Code for ₹1299 Payment">
+          <p>Pay ₹1299</p>
+        </div>
+
+        <label for="payment">Upload Payment Screenshot:</label>
+        <input type="file" id="payment" name="payment" accept="image/jpeg,image/png" required>
+        <div class="error-message" id="paymentError"></div>
+
+        <button type="submit" class="submit-btn" id="submitBtn">Submit Registration</button>
+      </form>
+    </div>
+  </div>
+
+  <div id="eventPass">
+    <img src="1745216646logo.png" alt="Event Logo" class="logo">
+    <h3>Event Pass</h3>
+    <div class="event-title">Canton Fair China & Import-Export Guide</div>
+    <img src="QR1.jpg" alt="Pass QR Code" class="pass-qr">
+    <div class="event-info">
+      <p>✔ Overview of the Canton Fair - what it is & how to attend</p>
+      <p>✔ How to find trusted suppliers in China</p>
+      <p>✔ Import & export process - step-by-step guide</p>
+      <p>✔ Key documents, shipping & logistics explained</p>
+      <p>✔ Tips to avoid scams & ensure product quality</p>
+      <p>✔ Q&A session with trade experts</p>
+      <p class="highlight">Perfect for business owners, startups & import-export beginners</p>
+      <p class="highlight">20 JULY 2025 | 5 PM ONWARD</p>
+      <p class="highlight">S.G HIGHWAY, AHMEDABAD</p>
+    </div>
+    <div class="customer-details">
+      <p><strong>Name:</strong> <span id="pName"></span></p>
+      <p><strong>Mobile:</strong> <span id="pMobile"></span></p>
+      <p><strong>City:</strong> <span id="pCity"></span></p>
+      <p><strong>Business:</strong> <span id="pBusiness"></span></p>
+      <p><strong>Pass ID:</strong> <span id="pPassId"></span></p>
+    </div>
+    <div class="footer">Canton Fair Seminar | Non-transferable Pass | Contact: support@cantonfair.com</div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+  <script>
+    const form = document.getElementById('eventForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const eventPass = document.getElementById('eventPass');
+    const formContainer = document.getElementById('formContainer');
+    const formError = document.getElementById('formError');
+
+    // Generate unique pass ID
+    function generatePassId() {
+      return 'CF' + Math.random().toString(36).substr(2, 8).toUpperCase();
+    }
+
+    // Validation function
+    function validateInputs() {
+      let isValid = true;
+      const name = document.getElementById('name').value.trim();
+      const mobile = document.getElementById('mobile').value.trim();
+      const city = document.getElementById('city').value.trim();
+      const business = document.getElementById('business').value.trim();
+      const payment = document.getElementById('payment').files[0];
+
+      // Reset error messages
+      document.querySelectorAll('.error-message').forEach(el => {
+        el.textContent = '';
+        el.style.display = 'none';
+      });
+
+      if (!name) {
+        document.getElementById('nameError').textContent = 'Name is required.';
+        document.getElementById('nameError').style.display = 'block';
+        isValid = false;
+      }
+
+      if (!mobile || !/^[0-9]{10}$/.test(mobile)) {
+        document.getElementById('mobileError').textContent = 'Enter a valid 10-digit mobile number.';
+        document.getElementById('mobileError').style.display = 'block';
+        isValid = false;
+      }
+
+      if (!city) {
+        document.getElementById('cityError').textContent = 'City is required.';
+        document.getElementById('cityError').style.display = 'block';
+        isValid = false;
+      }
+
+      if (!business) {
+        document.getElementById('businessError').textContent = 'Business type is required.';
+        document.getElementById('businessError').style.display = 'block';
+        isValid = false;
+      }
+
+      if (!payment || !['image/jpeg', 'image/png'].includes(payment.type)) {
+        document.getElementById('paymentError').textContent = 'Please upload a valid JPEG/PNG image.';
+        document.getElementById('paymentError').style.display = 'block';
+        isValid = false;
+      }
+
+      return isValid;
+    }
+
+    // Form submission handler
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      formError.textContent = '';
+      formError.style.display = 'none';
+
+      if (!validateInputs()) return;
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Processing...';
+
+      const formData = new FormData(form);
+      const name = formData.get('name');
+      const passId = generatePassId();
+
+      try {
+        // Populate event pass
+        document.getElementById('pName').textContent = name;
+        document.getElementById('pMobile').textContent = formData.get('mobile');
+        document.getElementById('pCity').textContent = formData.get('city');
+        document.getElementById('pBusiness').textContent = formData.get('business');
+        document.getElementById('pPassId').textContent = passId;
+
+        // Hide form and show event pass
+        formContainer.classList.add('hidden');
+        eventPass.style.display = 'block';
+
+        // Capture event pass as image with higher quality
+        const pixelRatio = window.devicePixelRatio || 1;
+        const canvas = await html2canvas(eventPass, {
+          scale: 5 * pixelRatio, // Higher scale adjusted for device pixel ratio
+          useCORS: true,
+          backgroundColor: null,
+          width: 400 * pixelRatio,
+          height: eventPass.offsetHeight * pixelRatio,
+          windowWidth: 400 * pixelRatio,
+          windowHeight: eventPass.offsetHeight * pixelRatio
+        });
+        const imgData = canvas.toDataURL('image/png', 1.0);
+
+        // Download event pass
+        const link = document.createElement('a');
+        link.href = imgData;
+        link.download = `Canton_Fair_Pass_${name}_${passId}.png`;
+        link.click();
+
+        // Send data to admin
+        formData.append('passId', passId);
+        const response = await fetch('http://localhost:5000/send-email', {
+          method: 'POST',
+          body: formData,
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || 'Failed to send email to admin.');
+        }
+
+        alert('Registration successful! Event pass downloaded and details sent to admin.');
+        form.reset();
+      } catch (err) {
+        console.error('Error:', err);
+        formError.textContent = `Registration completed, but email could not be sent: ${err.message}. Please contact support.`;
+        formError.style.display = 'block';
+        eventPass.style.display = 'block';
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Submit Registration';
+      }
+    });
+  </script>
+</body>
+</html>
