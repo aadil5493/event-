@@ -61,7 +61,7 @@ app.post('/send-email', upload.single('payment'), async (req, res) => {
       subject: `New Registration: Canton Fair Seminar - ${name}`,
       html: `
         <div style="font-family: 'Poppins', Arial, sans-serif; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px; background: #f9f9f9;">
-          <h2 style="color: #ffcc00; text-align: center; font-size: 24px; margin-bottom: 20px;">New Registration Details</h2>
+          <h2 style="color: #ff0000ff; text-align: center; font-size: 24px; margin-bottom: 20px;">New Registration Details</h2>
           <table style="width: 100%; border-collapse: collapse;">
             <tr>
               <td style="padding: 10px; font-weight: 600; width: 30%;">Name:</td>
