@@ -143,7 +143,7 @@
     .pass-container {
       display: none;
       max-width: 400px;
-      width: 100%;
+      width: 90%;
       text-align: center;
       background: #2e2e2e;
       border-radius: 12px;
@@ -151,6 +151,13 @@
       box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
       border: 1px solid #ffcc00;
       animation: fadeIn 0.5s ease-in;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 1000;
+      overflow: auto;
+      max-height: 85vh;
     }
 
     #passCanvas {
@@ -159,65 +166,81 @@
       border-radius: 10px;
       border: 2px solid #ffcc00;
       display: block;
-      margin: 0 auto;
+      margin: 0 auto 15px;
     }
 
     .pass-buttons {
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 12px;
-      margin-top: 20px;
+      gap: 15px;
+      margin-top: 15px;
     }
 
     .pass-buttons button {
-      width: 200px;
-      padding: 10px;
-      font-size: 14px;
+      width: 220px;
+      padding: 12px;
+      font-size: 15px;
       border: none;
-      border-radius: 6px;
+      border-radius: 8px;
       cursor: pointer;
       font-weight: 600;
       font-family: 'Poppins', sans-serif;
-      transition: transform 0.2s, background 0.3s;
+      transition: transform 0.2s, background 0.3s, box-shadow 0.3s;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
     }
 
     .pass-buttons button:hover {
-      transform: scale(1.05);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 15px rgba(0, 0, 0, 0.4);
     }
 
     .pass-buttons .download-btn {
       background: linear-gradient(90deg, #ffcc00, #f39c12);
-      color: #000;
+      color: #1a1a1a;
     }
 
     .pass-buttons .new-entry-btn {
-      background: #555;
+      background: linear-gradient(90deg, #555, #777);
       color: #fff;
     }
 
+    .loading-spinner {
+      display: none;
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #ffcc00;
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
+      animation: spin 1s linear infinite;
+      margin: 15px auto;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
     @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
+      from { opacity: 0; transform: translate(-50%, -40%); }
+      to { opacity: 1; transform: translate(-50%, -50%); }
     }
 
     @media (max-width: 450px) {
       .form-container, .pass-container {
         width: 95%;
-        max-width: 95%;
-        padding: 12px;
+        padding: 15px;
       }
       #passCanvas {
-        width: 100%;
-        max-width: 100%;
+        max-width: 300px;
       }
       h2 {
         font-size: 1.4em;
       }
       .pass-buttons button {
-        width: 80%;
-        font-size: 13px;
-        padding: 8px;
+        width: 90%;
+        font-size: 14px;
+        padding: 10px;
       }
       .qr-section img {
         width: 100px;
@@ -287,19 +310,38 @@
     function generatePassId() {
       passCounter++;
       localStorage.setItem('passCounter', passCounter);
-      return passCounter.toString();
+      return passCounter.toString().padStart(4, '0');
     }
 
-    // Set canvas size
+    // Set canvas size for high quality
     function setCanvasSize() {
-      const maxWidth = window.innerWidth > 450 ? 350 : window.innerWidth * 0.95;
-      passCanvas.width = maxWidth * 1.5; // Reduced resolution for smaller file size
-      passCanvas.height = maxWidth * 1.8; // Compact aspect ratio
+      const maxWidth = Math.min(window.innerWidth * 0.9, 350);
+      passCanvas.width = maxWidth * 2.4; // Increased for ~3MB output
+      passCanvas.height = maxWidth * 2.8; // Maintain aspect ratio
       passCanvas.style.width = `${maxWidth}px`;
-      passCanvas.style.height = `${maxWidth * 1.8}px`;
+      passCanvas.style.height = `${maxWidth * 1.4}px`;
     }
     setCanvasSize();
     window.addEventListener('resize', setCanvasSize);
+
+    // Show loading spinner
+    function showLoading() {
+      const spinner = document.createElement('div');
+      spinner.className = 'loading-spinner';
+      spinner.style.display = 'block';
+      passContainer.insertBefore(spinner, passCanvas);
+      formError.textContent = 'Processing registration...';
+      formError.style.color = '#ffcc00';
+      formError.style.display = 'block';
+    }
+
+    // Hide loading spinner
+    function hideLoading() {
+      const spinner = passContainer.querySelector('.loading-spinner');
+      if (spinner) spinner.remove();
+      formError.textContent = '';
+      formError.style.display = 'none';
+    }
 
     function validateInputs() {
       let isValid = true;
@@ -352,53 +394,68 @@
 
       submitBtn.disabled = true;
       submitBtn.textContent = 'Processing...';
+      showLoading();
 
       const formData = new FormData(form);
-      const name = formData.get('name');
-      const mobile = formData.get('mobile');
-      const city = formData.get('city');
-      const business = formData.get('business');
+      const name = formData.get('name').trim();
+      const mobile = formData.get('mobile').trim();
+      const city = formData.get('city').trim();
+      const business = formData.get('business').trim();
       const passId = generatePassId();
 
       try {
         const bgImage = new Image();
         bgImage.src = 'invitation pass.jpg';
+        bgImage.crossOrigin = 'Anonymous';
 
         bgImage.onload = async () => {
-          // Clear and draw background
+          setCanvasSize();
           ctx.clearRect(0, 0, passCanvas.width, passCanvas.height);
-          ctx.drawImage(bgImage, 0, 0, passCanvas.width, passCanvas.height);
+
+          // Draw background image with proper scaling
+          const aspectRatio = bgImage.width / bgImage.height;
+          let drawWidth = passCanvas.width;
+          let drawHeight = passCanvas.width / aspectRatio;
+          if (drawHeight > passCanvas.height) {
+            drawHeight = passCanvas.height;
+            drawWidth = passCanvas.height * aspectRatio;
+          }
+          ctx.drawImage(bgImage, (passCanvas.width - drawWidth) / 2, 0, drawWidth, drawHeight);
 
           // Text styling for customer details
-          const fontSize = passCanvas.width / 35; // ~10px at 350px width
+          const fontSize = passCanvas.width / 28;
           ctx.font = `600 ${fontSize}px Poppins`;
           ctx.fillStyle = '#000';
           ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.shadowColor = 'rgba(255, 255, 255, 0.5)';
+          ctx.shadowBlur = 3;
+          ctx.shadowOffsetX = 1;
+          ctx.shadowOffsetY = 1;
 
-          // White box center for customer details
+          // Draw customer details (no background box)
           const centerX = passCanvas.width / 2;
           const startY = passCanvas.height * 0.55;
-          const lineHeight = fontSize * 1.4;
-
-          // Draw customer details
+          const lineHeight = fontSize * 1.2;
+          ctx.fillStyle = '#000';
           ctx.fillText(`Name: ${name}`, centerX, startY);
           ctx.fillText(`Mobile: ${mobile}`, centerX, startY + lineHeight);
           ctx.fillText(`City: ${city}`, centerX, startY + lineHeight * 2);
           ctx.fillText(`Business: ${business}`, centerX, startY + lineHeight * 3);
 
-          // Pass ID at top-left corner, 40px from left
-          ctx.font = `500 ${fontSize * 0.9}px Poppins`; // Smaller, non-bold (~9px)
-          ctx.fillStyle = '#fff';
+          // Pass ID at top-left corner
+          ctx.font = `500 ${fontSize * 0.9}px Poppins`;
+          ctx.fillStyle = '#000';
           ctx.textAlign = 'left';
-          ctx.fillText(`Pass ID: ${passId}`, passCanvas.width * 0.114, passCanvas.height * 0.05); // 40px at 350px width
+          ctx.fillText(`Pass ID: ${passId}`, passCanvas.width * 0.1, passCanvas.height * 0.1);
 
-          // Show pass and buttons
-          formContainer.classList.add('hidden');
-          passContainer.style.display = 'block';
-          actionButtons.style.display = 'flex';
+          // Reset shadow
+          ctx.shadowBlur = 0;
+          ctx.shadowOffsetX = 0;
+          ctx.shadowOffsetY = 0;
 
           // Prepare pass image for email
-          const passImageData = passCanvas.toDataURL('image/png');
+          const passImageData = passCanvas.toDataURL('image/png', 1.0);
           formData.append('passImage', passImageData);
           formData.append('passId', passId);
 
@@ -413,24 +470,43 @@
             throw new Error(errorData.message || 'Failed to send email to admin.');
           }
 
+          // Email sent successfully, show pass
+          hideLoading();
+          formContainer.classList.add('hidden');
+          passContainer.style.display = 'block';
+          actionButtons.style.display = 'flex';
+
           formError.textContent = 'Registration successful! Pass displayed and details sent to admin.';
           formError.style.color = '#ffcc00';
           formError.style.display = 'block';
         };
+
+        bgImage.onerror = () => {
+          hideLoading();
+          formError.textContent = 'Error loading background image. Please try again.';
+          formError.style.display = 'block';
+          submitBtn.className = 'submit-btn';
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Submit Registration';
+        };
       } catch (err) {
         console.error('Error:', err);
-        formError.textContent = `Registration completed, but error occurred: ${err.message}`;
+        hideLoading();
+        formError.textContent = `Registration failed: ${err.message}`;
+        formError.style.color = '#ff4444';
         formError.style.display = 'block';
-      } finally {
+        submitBtn.className = 'submit-btn';
         submitBtn.disabled = false;
         submitBtn.textContent = 'Submit Registration';
       }
     });
 
     function downloadPass() {
+      const name = document.getElementById('name').value.trim() || 'Pass';
+      const passId = passCounter.toString().padStart(4, '0');
       const link = document.createElement('a');
-      link.download = `CantonFair_EventPass_${document.getElementById('name').value || 'Pass'}_${passCounter}.png`;
-      link.href = passCanvas.toDataURL('image/png');
+      link.download = `CantonFair_Pass_${name}_${passId}.png`;
+      link.href = passCanvas.toDataURL('image/png', 1.0);
       link.click();
     }
 
