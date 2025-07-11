@@ -7,7 +7,7 @@ const fs = require('fs').promises;
 require('dotenv').config();
 
 const app = express();
-const PORT = 5000;
+const PORT = process.env.PORT || 5000;
 
 // Middleware
 app.use(cors({ origin: process.env.NODE_ENV === 'production' ? 'http://your-client-domain' : '*' }));
@@ -89,12 +89,16 @@ app.post('/send-email', upload.single('payment'), async (req, res) => {
         pass: process.env.EMAIL_PASS,
       },
       pool: true,
+      maxConnections: 5,
       socketTimeout: 5000,
+      logger: true,
+      debug: process.env.NODE_ENV !== 'production',
     });
 
     const passImageBuffer = Buffer.from(passImage.replace(/^data:image\/png;base64,/, ''), 'base64');
     const adminEmail = 'Adinathoverseasrjt@gmail.com';
     console.log(`📧 Sending email to: ${adminEmail} for ${name}, Pass ID: ${passId}`);
+
     await transporter.sendMail({
       from: `"Canton Fair Seminar" <${process.env.EMAIL_USER}>`,
       to: adminEmail,
@@ -146,6 +150,8 @@ app.post('/send-email', upload.single('payment'), async (req, res) => {
   } catch (err) {
     console.error('❌ Email send error:', err);
     res.status(500).json({ message: 'Failed to send email to admin', error: err.message });
+  } finally {
+    transporter.close();
   }
 });
 

@@ -22,6 +22,7 @@
       align-items: center;
       min-height: 100vh;
       padding: 15px;
+      overflow-x: hidden;
     }
 
     .form-container {
@@ -156,7 +157,7 @@
       left: 50%;
       transform: translate(-50%, -50%);
       z-index: 1000;
-      overflow: auto;
+      overflow: visible;
       max-height: 85vh;
     }
 
@@ -205,6 +206,22 @@
       color: #fff;
     }
 
+    .loading-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      z-index: 999;
+      justify-content: center;
+      align-items: center;
+      color: #ffcc00;
+      font-size: 1.2em;
+      font-weight: 600;
+    }
+
     @keyframes fadeIn {
       from { opacity: 0; transform: translate(-50%, -40%); }
       to { opacity: 1; transform: translate(-50%, -50%); }
@@ -233,6 +250,7 @@
   </style>
 </head>
 <body>
+  <div class="loading-overlay" id="loadingOverlay">Generating Pass...</div>
   <div class="form-container" id="formContainer">
     <img src="Welcome.jpg" alt="Canton Fair Seminar" class="header-image">
     <div class="form-content">
@@ -286,6 +304,7 @@
     const formError = document.getElementById('formError');
     const passCanvas = document.getElementById('passCanvas');
     const ctx = passCanvas.getContext('2d');
+    const loadingOverlay = document.getElementById('loadingOverlay');
 
     // Preload background image
     const bgImage = new Image();
@@ -328,6 +347,8 @@
         drawHeight = passCanvas.height;
         drawWidth = passCanvas.height * aspectRatio;
       }
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
       ctx.drawImage(bgImage, (passCanvas.width - drawWidth) / 2, 0, drawWidth, drawHeight);
       cachedBackground = ctx.getImageData(0, 0, passCanvas.width, passCanvas.height);
     }
@@ -381,15 +402,27 @@
         const emailResponse = await fetch('http://localhost:5000/send-email', {
           method: 'POST',
           body: formData,
+          headers: {
+            'Accept': 'application/json',
+          },
         });
+        const responseData = await emailResponse.json();
         if (!emailResponse.ok) {
-          const errorData = await emailResponse.json();
-          console.error('❌ Email send failed:', errorData.message);
+          console.error('❌ Email send failed:', responseData.message);
+          formError.textContent = `Email failed: ${responseData.message}`;
+          formError.style.color = '#ff4444';
+          formError.style.display = 'block';
         } else {
-          console.log('✅ Email sent successfully in background');
+          console.log('✅ Email sent successfully to admin');
+          formError.textContent = 'Pass generated and email sent successfully!';
+          formError.style.color = '#ffcc00';
+          formError.style.display = 'block';
         }
       } catch (err) {
         console.error('❌ Email send error:', err);
+        formError.textContent = `Email failed: ${err.message}`;
+        formError.style.color = '#ff4444';
+        formError.style.display = 'block';
       }
     }
 
@@ -401,6 +434,8 @@
       if (!validateInputs()) return;
 
       submitBtn.disabled = true;
+      submitBtn.textContent = 'Processing...';
+      loadingOverlay.style.display = 'flex';
 
       const formData = new FormData(form);
       const name = formData.get('name').trim();
@@ -430,7 +465,7 @@
           passId = generateFallbackPassId();
         }
 
-        // Generate pass instantly
+        // Generate pass
         setCanvasSize();
         ctx.clearRect(0, 0, passCanvas.width, passCanvas.height);
         renderBackground();
@@ -473,19 +508,17 @@
         formContainer.classList.add('hidden');
         passContainer.style.display = 'block';
         actionButtons.style.display = 'flex';
-
-        formError.textContent = 'Pass generated! Email sending in background...';
-        formError.style.color = '#ffcc00';
-        formError.style.display = 'block';
+        loadingOverlay.style.display = 'none';
 
         // Send email in background
-        const passImageData = passCanvas.toDataURL('image/png', 1.0);
+        const passImageData = passCanvas.toDataURL('image/png', 0.8);
         sendEmailInBackground(formData, passId, passImageData);
       } catch (err) {
         console.error('Error:', err);
         formError.textContent = `Registration failed: ${err.message}`;
         formError.style.color = '#ff4444';
         formError.style.display = 'block';
+        loadingOverlay.style.display = 'none';
       } finally {
         submitBtn.disabled = false;
         submitBtn.textContent = 'Submit Registration';
@@ -497,7 +530,7 @@
       const passId = passCanvas.dataset.passId || '0001';
       const link = document.createElement('a');
       link.download = `CantonFair_Pass_${name}_${passId}.png`;
-      link.href = passCanvas.toDataURL('image/png', 1.0);
+      link.href = passCanvas.toDataURL('image/png', 0.8);
       link.click();
     }
 
@@ -509,7 +542,15 @@
       formError.style.display = 'none';
       ctx.clearRect(0, 0, passCanvas.width, passCanvas.height);
       cachedBackground = null;
+      loadingOverlay.style.display = 'none';
     }
+
+    // Prevent pass container from hiding on scroll
+    window.addEventListener('scroll', () => {
+      if (passContainer.style.display === 'block') {
+        passContainer.style.top = `${window.innerHeight / 2}px`;
+      }
+    });
   </script>
 </body>
 </html>
