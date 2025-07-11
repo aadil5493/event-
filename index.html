@@ -205,22 +205,6 @@
       color: #fff;
     }
 
-    .loading-spinner {
-      display: none;
-      border: 4px solid #f3f3f3;
-      border-top: 4px solid #ffcc00;
-      border-radius: 50%;
-      width: 30px;
-      height: 30px;
-      animation: spin 1s linear infinite;
-      margin: 15px auto;
-    }
-
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-
     @keyframes fadeIn {
       from { opacity: 0; transform: translate(-50%, -40%); }
       to { opacity: 1; transform: translate(-50%, -50%); }
@@ -293,7 +277,6 @@
     </div>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   <script>
     const form = document.getElementById('eventForm');
     const submitBtn = document.getElementById('submitBtn');
@@ -304,43 +287,49 @@
     const passCanvas = document.getElementById('passCanvas');
     const ctx = passCanvas.getContext('2d');
 
-    // Initialize pass ID counter from localStorage
-    let passCounter = parseInt(localStorage.getItem('passCounter') || '0');
+    // Preload background image
+    const bgImage = new Image();
+    bgImage.src = 'invitation pass.jpg';
+    bgImage.crossOrigin = 'Anonymous';
 
-    function generatePassId() {
-      passCounter++;
-      localStorage.setItem('passCounter', passCounter);
-      return passCounter.toString().padStart(4, '0');
+    // Cache for background rendering
+    let cachedBackground = null;
+
+    // Fallback passId counter
+    let localPassCounter = parseInt(localStorage.getItem('localPassCounter') || '0');
+
+    function generateFallbackPassId() {
+      localPassCounter++;
+      localStorage.setItem('localPassCounter', localPassCounter);
+      return localPassCounter.toString().padStart(4, '0');
     }
 
-    // Set canvas size for high quality
+    // Set canvas size for ~3 MB pass
     function setCanvasSize() {
       const maxWidth = Math.min(window.innerWidth * 0.9, 350);
-      passCanvas.width = maxWidth * 2.4; // Increased for ~3MB output
-      passCanvas.height = maxWidth * 2.8; // Maintain aspect ratio
+      passCanvas.width = maxWidth * 2.4;
+      passCanvas.height = maxWidth * 2.8;
       passCanvas.style.width = `${maxWidth}px`;
       passCanvas.style.height = `${maxWidth * 1.4}px`;
     }
     setCanvasSize();
     window.addEventListener('resize', setCanvasSize);
 
-    // Show loading spinner
-    function showLoading() {
-      const spinner = document.createElement('div');
-      spinner.className = 'loading-spinner';
-      spinner.style.display = 'block';
-      passContainer.insertBefore(spinner, passCanvas);
-      formError.textContent = 'Processing registration...';
-      formError.style.color = '#ffcc00';
-      formError.style.display = 'block';
-    }
-
-    // Hide loading spinner
-    function hideLoading() {
-      const spinner = passContainer.querySelector('.loading-spinner');
-      if (spinner) spinner.remove();
-      formError.textContent = '';
-      formError.style.display = 'none';
+    // Render and cache background
+    function renderBackground() {
+      if (cachedBackground) {
+        ctx.putImageData(cachedBackground, 0, 0);
+        return;
+      }
+      const aspectRatio = bgImage.width / bgImage.height;
+      let drawWidth = passCanvas.width;
+      let drawHeight = passCanvas.width / aspectRatio;
+      if (drawHeight > passCanvas.height) {
+        drawHeight = passCanvas.height;
+        drawWidth = passCanvas.height * aspectRatio;
+      }
+      ctx.drawImage(bgImage, (passCanvas.width - drawWidth) / 2, 0, drawWidth, drawHeight);
+      cachedBackground = ctx.getImageData(0, 0, passCanvas.width, passCanvas.height);
     }
 
     function validateInputs() {
@@ -385,6 +374,25 @@
       return isValid;
     }
 
+    async function sendEmailInBackground(formData, passId, passImageData) {
+      try {
+        formData.append('passImage', passImageData);
+        formData.append('passId', passId);
+        const emailResponse = await fetch('http://localhost:5000/send-email', {
+          method: 'POST',
+          body: formData,
+        });
+        if (!emailResponse.ok) {
+          const errorData = await emailResponse.json();
+          console.error('❌ Email send failed:', errorData.message);
+        } else {
+          console.log('✅ Email sent successfully in background');
+        }
+      } catch (err) {
+        console.error('❌ Email send error:', err);
+      }
+    }
+
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       formError.textContent = '';
@@ -393,109 +401,92 @@
       if (!validateInputs()) return;
 
       submitBtn.disabled = true;
-      submitBtn.textContent = 'Processing...';
-      showLoading();
 
       const formData = new FormData(form);
       const name = formData.get('name').trim();
       const mobile = formData.get('mobile').trim();
       const city = formData.get('city').trim();
       const business = formData.get('business').trim();
-      const passId = generatePassId();
 
       try {
-        const bgImage = new Image();
-        bgImage.src = 'invitation pass.jpg';
-        bgImage.crossOrigin = 'Anonymous';
+        if (!bgImage.complete || bgImage.naturalWidth === 0) {
+          throw new Error('Background image failed to load.');
+        }
 
-        bgImage.onload = async () => {
-          setCanvasSize();
-          ctx.clearRect(0, 0, passCanvas.width, passCanvas.height);
-
-          // Draw background image with proper scaling
-          const aspectRatio = bgImage.width / bgImage.height;
-          let drawWidth = passCanvas.width;
-          let drawHeight = passCanvas.width / aspectRatio;
-          if (drawHeight > passCanvas.height) {
-            drawHeight = passCanvas.height;
-            drawWidth = passCanvas.height * aspectRatio;
+        // Fetch unique passId
+        let passId;
+        try {
+          const passIdResponse = await Promise.race([
+            fetch('http://localhost:5000/generate-pass-id'),
+            new Promise((_, reject) => setTimeout(() => reject(new Error('Pass ID fetch timeout')), 3000))
+          ]);
+          if (!passIdResponse.ok) {
+            throw new Error('Failed to fetch pass ID from server.');
           }
-          ctx.drawImage(bgImage, (passCanvas.width - drawWidth) / 2, 0, drawWidth, drawHeight);
+          const responseData = await passIdResponse.json();
+          passId = responseData.passId;
+        } catch (err) {
+          console.warn('⚠️ Using fallback passId:', err.message);
+          passId = generateFallbackPassId();
+        }
 
-          // Text styling for customer details
-          const fontSize = passCanvas.width / 28;
-          ctx.font = `600 ${fontSize}px Poppins`;
-          ctx.fillStyle = '#000';
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'middle';
-          ctx.shadowColor = 'rgba(255, 255, 255, 0.5)';
-          ctx.shadowBlur = 3;
-          ctx.shadowOffsetX = 1;
-          ctx.shadowOffsetY = 1;
+        // Generate pass instantly
+        setCanvasSize();
+        ctx.clearRect(0, 0, passCanvas.width, passCanvas.height);
+        renderBackground();
 
-          // Draw customer details (no background box)
-          const centerX = passCanvas.width / 2;
-          const startY = passCanvas.height * 0.55;
-          const lineHeight = fontSize * 1.2;
-          ctx.fillStyle = '#000';
-          ctx.fillText(`Name: ${name}`, centerX, startY);
-          ctx.fillText(`Mobile: ${mobile}`, centerX, startY + lineHeight);
-          ctx.fillText(`City: ${city}`, centerX, startY + lineHeight * 2);
-          ctx.fillText(`Business: ${business}`, centerX, startY + lineHeight * 3);
+        // Text styling
+        const fontSize = passCanvas.width / 28;
+        ctx.font = `600 ${fontSize}px Poppins`;
+        ctx.fillStyle = '#000';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.shadowColor = 'rgba(255, 255, 255, 0.5)';
+        ctx.shadowBlur = 3;
+        ctx.shadowOffsetX = 1;
+        ctx.shadowOffsetY = 1;
 
-          // Pass ID at top-left corner
-          ctx.font = `500 ${fontSize * 0.9}px Poppins`;
-          ctx.fillStyle = '#000';
-          ctx.textAlign = 'left';
-          ctx.fillText(`Pass ID: ${passId}`, passCanvas.width * 0.1, passCanvas.height * 0.1);
+        // Draw customer details
+        const centerX = passCanvas.width / 2;
+        const startY = passCanvas.height * 0.55;
+        const lineHeight = fontSize * 1.2;
+        ctx.fillText(`Name: ${name}`, centerX, startY);
+        ctx.fillText(`Mobile: ${mobile}`, centerX, startY + lineHeight);
+        ctx.fillText(`City: ${city}`, centerX, startY + lineHeight * 2);
+        ctx.fillText(`Business: ${business}`, centerX, startY + lineHeight * 3);
 
-          // Reset shadow
-          ctx.shadowBlur = 0;
-          ctx.shadowOffsetX = 0;
-          ctx.shadowOffsetY = 0;
+        // Pass ID
+        ctx.font = `500 ${fontSize * 0.9}px Poppins`;
+        ctx.fillStyle = '#000';
+        ctx.textAlign = 'left';
+        ctx.fillText(`Pass ID: ${passId}`, passCanvas.width * 0.1, passCanvas.height * 0.1);
 
-          // Prepare pass image for email
-          const passImageData = passCanvas.toDataURL('image/png', 1.0);
-          formData.append('passImage', passImageData);
-          formData.append('passId', passId);
+        // Reset shadow
+        ctx.shadowBlur = 0;
+        ctx.shadowOffsetX = 0;
+        ctx.shadowOffsetY = 0;
 
-          // Send email
-          const response = await fetch('http://localhost:5000/send-email', {
-            method: 'POST',
-            body: formData,
-          });
+        // Store passId
+        passCanvas.dataset.passId = passId;
 
-          if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.message || 'Failed to send email to admin.');
-          }
+        // Show pass
+        formContainer.classList.add('hidden');
+        passContainer.style.display = 'block';
+        actionButtons.style.display = 'flex';
 
-          // Email sent successfully, show pass
-          hideLoading();
-          formContainer.classList.add('hidden');
-          passContainer.style.display = 'block';
-          actionButtons.style.display = 'flex';
+        formError.textContent = 'Pass generated! Email sending in background...';
+        formError.style.color = '#ffcc00';
+        formError.style.display = 'block';
 
-          formError.textContent = 'Registration successful! Pass displayed and details sent to admin.';
-          formError.style.color = '#ffcc00';
-          formError.style.display = 'block';
-        };
-
-        bgImage.onerror = () => {
-          hideLoading();
-          formError.textContent = 'Error loading background image. Please try again.';
-          formError.style.display = 'block';
-          submitBtn.className = 'submit-btn';
-          submitBtn.disabled = false;
-          submitBtn.textContent = 'Submit Registration';
-        };
+        // Send email in background
+        const passImageData = passCanvas.toDataURL('image/png', 1.0);
+        sendEmailInBackground(formData, passId, passImageData);
       } catch (err) {
         console.error('Error:', err);
-        hideLoading();
         formError.textContent = `Registration failed: ${err.message}`;
         formError.style.color = '#ff4444';
         formError.style.display = 'block';
-        submitBtn.className = 'submit-btn';
+      } finally {
         submitBtn.disabled = false;
         submitBtn.textContent = 'Submit Registration';
       }
@@ -503,7 +494,7 @@
 
     function downloadPass() {
       const name = document.getElementById('name').value.trim() || 'Pass';
-      const passId = passCounter.toString().padStart(4, '0');
+      const passId = passCanvas.dataset.passId || '0001';
       const link = document.createElement('a');
       link.download = `CantonFair_Pass_${name}_${passId}.png`;
       link.href = passCanvas.toDataURL('image/png', 1.0);
@@ -517,6 +508,7 @@
       formContainer.classList.remove('hidden');
       formError.style.display = 'none';
       ctx.clearRect(0, 0, passCanvas.width, passCanvas.height);
+      cachedBackground = null;
     }
   </script>
 </body>
