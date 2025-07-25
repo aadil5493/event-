@@ -444,7 +444,10 @@
         let passId;
         try {
           const passIdResponse = await Promise.race([
-            fetch('http://localhost:5000/generate-pass-id'),
+            fetch('https://event-unfa.onrender.com/get-pass-id', {
+              method: 'GET',
+              headers: { 'Content-Type': 'application/json' }
+            }),
             new Promise((_, reject) => setTimeout(() => reject(new Error('Pass ID fetch timeout')), 5000))
           ]);
           if (!passIdResponse.ok) {

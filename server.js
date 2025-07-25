@@ -7,7 +7,7 @@ const fs = require('fs').promises;
 require('dotenv').config();
 
 const app = express();
-const PORT = 5000;
+const PORT = process.env.PORT || 5000; // Use Render's PORT env variable
 
 // File to store the last Pass ID
 const PASS_ID_FILE = path.join(__dirname, 'passIdCounter.json');
@@ -52,7 +52,7 @@ async function generatePassId() {
 // Load Pass ID counter on server start
 loadPassIdCounter();
 
-app.use(cors());
+app.use(cors({ origin: '*' })); // Allow all origins for testing; restrict in production
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(__dirname));
@@ -95,6 +95,7 @@ const transporter = nodemailer.createTransport({
 app.get('/generate-pass-id', async (req, res) => {
   try {
     const passId = await generatePassId();
+    console.log(`✅ Generated Pass ID: ${passId} for request from ${req.ip}`);
     res.status(200).json({ passId });
   } catch (err) {
     console.error('❌ Error generating Pass ID:', err);
@@ -109,6 +110,7 @@ app.post('/send-email', upload.fields([{ name: 'payment', maxCount: 1 }, { name:
   const passImage = req.files['passImage'] ? req.files['passImage'][0] : null;
 
   if (!name || !email || !mobile || !/^\d{10}$/.test(mobile) || !city || !business || !payment || !passId || !passImage) {
+    console.error('❌ Missing or invalid fields:', { name, email, mobile, city, business, payment: !!payment, passId, passImage: !!passImage });
     return res.status(400).json({ message: 'Missing or invalid fields.' });
   }
 
@@ -185,5 +187,5 @@ app.post('/send-email', upload.fields([{ name: 'payment', maxCount: 1 }, { name:
 
 // Start server
 app.listen(PORT, () => {
-  console.log(`✅ Server is running at http://localhost:${PORT}`);
+  console.log(`✅ Server is running at http://0.0.0.0:${PORT}`);
 });
