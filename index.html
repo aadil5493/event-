@@ -314,6 +314,15 @@
     // Cache for background rendering
     let cachedBackground = null;
 
+    // Fallback passId counter
+    let localPassCounter = parseInt(localStorage.getItem('localPassCounter') || '0');
+
+    function generateFallbackPassId() {
+      localPassCounter++;
+      localStorage.setItem('localPassCounter', localPassCounter);
+      return localPassCounter.toString().padStart(4, '0');
+    }
+
     // Set canvas size for ~3 MB pass
     function setCanvasSize() {
       const maxWidth = Math.min(window.innerWidth * 0.9, 350);
@@ -388,15 +397,14 @@
 
     async function sendEmailInBackground(formData, passId, passImageData) {
       try {
-        // Convert passImageData (base64) to Blob
-        const passImageResponse = await fetch(passImageData);
-        const passImageBlob = await passImageResponse.blob();
-        formData.append('passImage', passImageBlob, `CantonFair_Pass_${formData.get('name')}_${passId}.png`);
+        formData.append('passImage', passImageData);
         formData.append('passId', passId);
-
         const emailResponse = await fetch('http://localhost:5000/send-email', {
           method: 'POST',
           body: formData,
+          headers: {
+            'Accept': 'application/json',
+          },
         });
         const responseData = await emailResponse.json();
         if (!emailResponse.ok) {
@@ -440,30 +448,21 @@
           throw new Error('Background image failed to load.');
         }
 
-        // Fetch unique passId from server
+        // Fetch unique passId
         let passId;
         try {
           const passIdResponse = await Promise.race([
-            fetch('https://event-unfa.onrender.com/get-pass-id', {
-              method: 'GET',
-              headers: { 'Content-Type': 'application/json' }
-            }),
-            new Promise((_, reject) => setTimeout(() => reject(new Error('Pass ID fetch timeout')), 5000))
+            fetch('http://localhost:5000/generate-pass-id'),
+            new Promise((_, reject) => setTimeout(() => reject(new Error('Pass ID fetch timeout')), 3000))
           ]);
           if (!passIdResponse.ok) {
-            throw new Error('Failed to fetch Pass ID from server.');
+            throw new Error('Failed to fetch pass ID from server.');
           }
           const responseData = await passIdResponse.json();
           passId = responseData.passId;
         } catch (err) {
-          console.error('❌ Pass ID fetch error:', err);
-          formError.textContent = `Failed to generate Pass ID: ${err.message}`;
-          formError.style.color = '#ff4444';
-          formError.style.display = 'block';
-          submitBtn.disabled = false;
-          submitBtn.textContent = 'Submit Registration';
-          loadingOverlay.style.display = 'none';
-          return;
+          console.warn('⚠️ Using fallback passId:', err.message);
+          passId = generateFallbackPassId();
         }
 
         // Generate pass
@@ -513,7 +512,7 @@
 
         // Send email in background
         const passImageData = passCanvas.toDataURL('image/png', 0.8);
-        await sendEmailInBackground(formData, passId, passImageData);
+        sendEmailInBackground(formData, passId, passImageData);
       } catch (err) {
         console.error('Error:', err);
         formError.textContent = `Registration failed: ${err.message}`;
@@ -528,7 +527,7 @@
 
     function downloadPass() {
       const name = document.getElementById('name').value.trim() || 'Pass';
-      const passId = passCanvas.dataset.passId || 'unknown';
+      const passId = passCanvas.dataset.passId || '0001';
       const link = document.createElement('a');
       link.download = `CantonFair_Pass_${name}_${passId}.png`;
       link.href = passCanvas.toDataURL('image/png', 0.8);
