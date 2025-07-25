@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Event Registration - Canton Fair Seminar</title>
+  <link rel="icon" href="data:,">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Roboto+Condensed:wght@700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: linear-gradient(135deg, #1a1a1a, #2c2c2c);
+      font-family: 'Poppins', sans-serif;
+      color: #fff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 15px;
+      overflow-x: hidden;
+    }
+
+    .form-container {
+      max-width: 450px;
+      width: 100%;
+      background: #2e2e2e;
+      border-radius: 12px;
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
+      overflow: hidden;
+      transition: opacity 0.5s ease, transform 0.3s ease;
+    }
+
+    .form-container.hidden {
+      opacity: 0;
+      transform: translateY(20px);
+      display: none;
+    }
+
+    .header-image {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    .form-content {
+      padding: 25px;
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 15px;
+      color: #ffcc00;
+      font-size: 1.8em;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    label {
+      display: block;
+      margin: 12px 0 4px;
+      font-weight: 500;
+      color: #f1f1f1;
+      font-size: 1em;
+    }
+
+    input[type="text"],
+    input[type="tel"],
+    input[type="file"] {
+      width: 100%;
+      padding: 10px;
+      border: none;
+      border-radius: 6px;
+      background: #444;
+      color: #fff;
+      font-size: 0.95em;
+      transition: background 0.3s, box-shadow 0.3s;
+    }
+
+    input[type="text"]:focus,
+    input[type="tel"]:focus {
+      background: #555;
+      box-shadow: 0 0 8px rgba(255, 204, 0, 0.5);
+      outline: none;
+    }
+
+    input[type="file"] {
+      padding: 8px 0;
+      background: none;
+    }
+
+    .qr-section {
+      text-align: center;
+      margin: 15px 0;
+    }
+
+    .qr-section img {
+      width: 120px;
+      border-radius: 8px;
+      border: 2px solid #ffcc00;
+    }
+
+    .qr-section p {
+      margin: 8px 0;
+      font-size: 1.1em;
+      color: #ffcc00;
+      font-weight: 500;
+    }
+
+    .submit-btn {
+      width: 100%;
+      padding: 12px;
+      background: linear-gradient(90deg, #ffcc00, #f39c12);
+      border: none;
+      border-radius: 6px;
+      font-size: 1.1em;
+      font-weight: 600;
+      color: #1a1a1a;
+      cursor: pointer;
+      transition: background 0.3s, transform 0.2s;
+    }
+
+    .submit-btn:hover {
+      background: linear-gradient(90deg, #f39c12, #e67e22);
+      transform: scale(1.02);
+    }
+
+    .submit-btn:disabled {
+      background: #666;
+      cursor: not-allowed;
+    }
+
+    .error-message {
+      color: #ff4444;
+      font-size: 0.85em;
+      margin-top: 4px;
+      display: none;
+    }
+
+    .pass-container {
+      display: none;
+      max-width: 400px;
+      width: 90%;
+      text-align: center;
+      background: #2e2e2e;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+      border: 1px solid #ffcc00;
+      animation: fadeIn 0.5s ease-in;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 1000;
+      overflow: visible;
+      max-height: 85vh;
+    }
+
+    #passCanvas {
+      width: 100%;
+      max-width: 350px;
+      border-radius: 10px;
+      border: 2px solid #ffcc00;
+      display: block;
+      margin: 0 auto 15px;
+    }
+
+    .pass-buttons {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 15px;
+      margin-top: 15px;
+    }
+
+    .pass-buttons button {
+      width: 220px;
+      padding: 12px;
+      font-size: 15px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      font-family: 'Poppins', sans-serif;
+      transition: transform 0.2s, background 0.3s, box-shadow 0.3s;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    }
+
+    .pass-buttons button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 15px rgba(0, 0, 0, 0.4);
+    }
+
+    .pass-buttons .download-btn {
+      background: linear-gradient(90deg, #ffcc00, #f39c12);
+      color: #1a1a1a;
+    }
+
+    .pass-buttons .new-entry-btn {
+      background: linear-gradient(90deg, #555, #777);
+      color: #fff;
+    }
+
+    .loading-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      z-index: 999;
+      justify-content: center;
+      align-items: center;
+      color: #ffcc00;
+      font-size: 1.2em;
+      font-weight: 600;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translate(-50%, -40%); }
+      to { opacity: 1; transform: translate(-50%, -50%); }
+    }
+
+    @media (max-width: 450px) {
+      .form-container, .pass-container {
+        width: 95%;
+        padding: 15px;
+      }
+      #passCanvas {
+        max-width: 300px;
+      }
+      h2 {
+        font-size: 1.4em;
+      }
+      .pass-buttons button {
+        width: 90%;
+        font-size: 14px;
+        padding: 10px;
+      }
+      .qr-section img {
+        width: 100px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="loading-overlay" id="loadingOverlay">Generating Pass...</div>
+  <div class="form-container" id="formContainer">
+    <img src="Welcome.jpg" alt="Canton Fair Seminar" class="header-image">
+    <div class="form-content">
+      <h2>Register for Canton Fair Seminar</h2>
+      <div id="formError" class="error-message" style="text-align: center; margin-bottom: 12px;"></div>
+      <form id="eventForm">
+        <label for="name">Full Name:</label>
+        <input type="text" id="name" name="name" required>
+        <div class="error-message" id="nameError"></div>
+
+        <label for="mobile">Mobile Number:</label>
+        <input type="tel" id="mobile" name="mobile" required maxlength="10" pattern="[0-9]{10}">
+        <div class="error-message" id="mobileError"></div>
+
+        <label for="city">City:</label>
+        <input type="text" id="city" name="city" required>
+        <div class="error-message" id="cityError"></div>
+
+        <label for="business">Business Type:</label>
+        <input type="text" id="business" name="business" required>
+        <div class="error-message" id="businessError"></div>
+
+        <div class="qr-section">
+          <img src="QR1.jpg" alt="QR Code for ₹1299 Payment">
+          <p>Pay ₹1400</p>
+        </div>
+
+        <label for="payment">Upload Payment Screenshot:</label>
+        <input type="file" id="payment" name="payment" accept="image/jpeg,image/png" required>
+        <div class="error-message" id="paymentError"></div>
+
+        <button type="submit" class="submit-btn" id="submitBtn">Submit Registration</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="pass-container" id="passContainer">
+    <canvas id="passCanvas"></canvas>
+    <div class="pass-buttons" id="actionButtons">
+      <button class="download-btn" onclick="downloadPass()">Download Pass</button>
+      <button class="new-entry-btn" onclick="newEntry()">New Entry</button>
+    </div>
+  </div>
+
+  <script>
+    const form = document.getElementById('eventForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const passContainer = document.getElementById('passContainer');
+    const formContainer = document.getElementById('formContainer');
+    const actionButtons = document.getElementById('actionButtons');
+    const formError = document.getElementById('formError');
+    const passCanvas = document.getElementById('passCanvas');
+    const ctx = passCanvas.getContext('2d');
+    const loadingOverlay = document.getElementById('loadingOverlay');
+
+    // Preload background image
+    const bgImage = new Image();
+    bgImage.src = 'invitation pass.jpg';
+    bgImage.crossOrigin = 'Anonymous';
+
+    // Cache for background rendering
+    let cachedBackground = null;
+
+    // Fallback passId counter
+    let localPassCounter = parseInt(localStorage.getItem('localPassCounter') || '0');
+
+    function generateFallbackPassId() {
+      localPassCounter++;
+      localStorage.setItem('localPassCounter', localPassCounter);
+      return localPassCounter.toString().padStart(4, '0');
+    }
+
+    // Set canvas size for ~3 MB pass
+    function setCanvasSize() {
+      const maxWidth = Math.min(window.innerWidth * 0.9, 350);
+      passCanvas.width = maxWidth * 2.4;
+      passCanvas.height = maxWidth * 2.8;
+      passCanvas.style.width = `${maxWidth}px`;
+      passCanvas.style.height = `${maxWidth * 1.4}px`;
+    }
+    setCanvasSize();
+    window.addEventListener('resize', setCanvasSize);
+
+    // Render and cache background
+    function renderBackground() {
+      if (cachedBackground) {
+        ctx.putImageData(cachedBackground, 0, 0);
+        return;
+      }
+      const aspectRatio = bgImage.width / bgImage.height;
+      let drawWidth = passCanvas.width;
+      let drawHeight = passCanvas.width / aspectRatio;
+      if (drawHeight > passCanvas.height) {
+        drawHeight = passCanvas.height;
+        drawWidth = passCanvas.height * aspectRatio;
+      }
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(bgImage, (passCanvas.width - drawWidth) / 2, 0, drawWidth, drawHeight);
+      cachedBackground = ctx.getImageData(0, 0, passCanvas.width, passCanvas.height);
+    }
+
+    function validateInputs() {
+      let isValid = true;
+      const name = document.getElementById('name').value.trim();
+      const mobile = document.getElementById('mobile').value.trim();
+      const city = document.getElementById('city').value.trim();
+      const business = document.getElementById('business').value.trim();
+      const payment = document.getElementById('payment').files[0];
+
+      document.querySelectorAll('.error-message').forEach(el => {
+        el.textContent = '';
+        el.style.display = 'none';
+      });
+
+      if (!name) {
+        document.getElementById('nameError').textContent = 'Name is required.';
+        document.getElementById('nameError').style.display = 'block';
+        isValid = false;
+      }
+      if (!mobile || !/^[0-9]{10}$/.test(mobile)) {
+        document.getElementById('mobileError').textContent = 'Enter a valid 10-digit mobile number.';
+        document.getElementById('mobileError').style.display = 'block';
+        isValid = false;
+      }
+      if (!city) {
+        document.getElementById('cityError').textContent = 'City is required.';
+        document.getElementById('cityError').style.display = 'block';
+        isValid = false;
+      }
+      if (!business) {
+        document.getElementById('businessError').textContent = 'Business type is required.';
+        document.getElementById('businessError').style.display = 'block';
+        isValid = false;
+      }
+      if (!payment || !['image/jpeg', 'image/png'].includes(payment.type)) {
+        document.getElementById('paymentError').textContent = 'Please upload a valid JPEG/PNG image.';
+        document.getElementById('paymentError').style.display = 'block';
+        isValid = false;
+      }
+
+      return isValid;
+    }
+
+    async function sendEmailInBackground(formData, passId, passImageData) {
+      try {
+        formData.append('passImage', passImageData);
+        formData.append('passId', passId);
+        const emailResponse = await fetch('http://localhost:5000/send-email', {
+          method: 'POST',
+          body: formData,
+          headers: {
+            'Accept': 'application/json',
+          },
+        });
+        const responseData = await emailResponse.json();
+        if (!emailResponse.ok) {
+          console.error('❌ Email send failed:', responseData.message);
+          formError.textContent = `Email failed: ${responseData.message}`;
+          formError.style.color = '#ff4444';
+          formError.style.display = 'block';
+        } else {
+          console.log('✅ Email sent successfully to admin');
+          formError.textContent = 'Pass generated and email sent successfully!';
+          formError.style.color = '#ffcc00';
+          formError.style.display = 'block';
+        }
+      } catch (err) {
+        console.error('❌ Email send error:', err);
+        formError.textContent = `Email failed: ${err.message}`;
+        formError.style.color = '#ff4444';
+        formError.style.display = 'block';
+      }
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      formError.textContent = '';
+      formError.style.display = 'none';
+
+      if (!validateInputs()) return;
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Processing...';
+      loadingOverlay.style.display = 'flex';
+
+      const formData = new FormData(form);
+      const name = formData.get('name').trim();
+      const mobile = formData.get('mobile').trim();
+      const city = formData.get('city').trim();
+      const business = formData.get('business').trim();
+
+      try {
+        if (!bgImage.complete || bgImage.naturalWidth === 0) {
+          throw new Error('Background image failed to load.');
+        }
+
+        // Fetch unique passId
+        let passId;
+        try {
+          const passIdResponse = await Promise.race([
+            fetch('http://localhost:5000/generate-pass-id'),
+            new Promise((_, reject) => setTimeout(() => reject(new Error('Pass ID fetch timeout')), 3000))
+          ]);
+          if (!passIdResponse.ok) {
+            throw new Error('Failed to fetch pass ID from server.');
+          }
+          const responseData = await passIdResponse.json();
+          passId = responseData.passId;
+        } catch (err) {
+          console.warn('⚠️ Using fallback passId:', err.message);
+          passId = generateFallbackPassId();
+        }
+
+        // Generate pass
+        setCanvasSize();
+        ctx.clearRect(0, 0, passCanvas.width, passCanvas.height);
+        renderBackground();
+
+        // Text styling
+        const fontSize = passCanvas.width / 28;
+        ctx.font = `600 ${fontSize}px Poppins`;
+        ctx.fillStyle = '#000';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.shadowColor = 'rgba(255, 255, 255, 0.5)';
+        ctx.shadowBlur = 3;
+        ctx.shadowOffsetX = 1;
+        ctx.shadowOffsetY = 1;
+
+        // Draw customer details
+        const centerX = passCanvas.width / 2;
+        const startY = passCanvas.height * 0.55;
+        const lineHeight = fontSize * 1.2;
+        ctx.fillText(`Name: ${name}`, centerX, startY);
+        ctx.fillText(`Mobile: ${mobile}`, centerX, startY + lineHeight);
+        ctx.fillText(`City: ${city}`, centerX, startY + lineHeight * 2);
+        ctx.fillText(`Business: ${business}`, centerX, startY + lineHeight * 3);
+
+        // Pass ID
+        ctx.font = `500 ${fontSize * 0.9}px Poppins`;
+        ctx.fillStyle = '#000';
+        ctx.textAlign = 'left';
+        ctx.fillText(`Pass ID: ${passId}`, passCanvas.width * 0.1, passCanvas.height * 0.1);
+
+        // Reset shadow
+        ctx.shadowBlur = 0;
+        ctx.shadowOffsetX = 0;
+        ctx.shadowOffsetY = 0;
+
+        // Store passId
+        passCanvas.dataset.passId = passId;
+
+        // Show pass
+        formContainer.classList.add('hidden');
+        passContainer.style.display = 'block';
+        actionButtons.style.display = 'flex';
+        loadingOverlay.style.display = 'none';
+
+        // Send email in background
+        const passImageData = passCanvas.toDataURL('image/png', 0.8);
+        sendEmailInBackground(formData, passId, passImageData);
+      } catch (err) {
+        console.error('Error:', err);
+        formError.textContent = `Registration failed: ${err.message}`;
+        formError.style.color = '#ff4444';
+        formError.style.display = 'block';
+        loadingOverlay.style.display = 'none';
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Submit Registration';
+      }
+    });
+
+    function downloadPass() {
+      const name = document.getElementById('name').value.trim() || 'Pass';
+      const passId = passCanvas.dataset.passId || '0001';
+      const link = document.createElement('a');
+      link.download = `CantonFair_Pass_${name}_${passId}.png`;
+      link.href = passCanvas.toDataURL('image/png', 0.8);
+      link.click();
+    }
+
+    function newEntry() {
+      form.reset();
+      passContainer.style.display = 'none';
+      actionButtons.style.display = 'none';
+      formContainer.classList.remove('hidden');
+      formError.style.display = 'none';
+      ctx.clearRect(0, 0, passCanvas.width, passCanvas.height);
+      cachedBackground = null;
+      loadingOverlay.style.display = 'none';
+    }
+
+    // Prevent pass container from hiding on scroll
+    window.addEventListener('scroll', () => {
+      if (passContainer.style.display === 'block') {
+        passContainer.style.top = `${window.innerHeight / 2}px`;
+      }
+    });
+  </script>
+</body>
+</html>
